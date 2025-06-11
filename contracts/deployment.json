@@ -1,0 +1,10 @@
+{
+  "contractAddress": "0xDFFDEC1349d326173d825877a1D19267dDBbbe99",
+  "contractName": "PromptNFT",
+  "deployerAddress": "0xEF8a56C4040Bf0E3f2cEC1eBFf244bd77d04d5E1",
+  "network": "sepolia",
+  "chainId": "11155111",
+  "blockNumber": 8509381,
+  "timestamp": "2025-06-09T07:01:22.733Z",
+  "transactionHash": "0x05000d4b94b770c84a47c8db27fa20db544a78d26141f05885cc9646a82f6dca"
+}
