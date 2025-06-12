@@ -1,0 +1,75 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { direction, style } = await request.json();
+
+    if (!direction) {
+      console.log('Missing direction in request');
+      return NextResponse.json({ error: 'Direction is required' }, { status: 400 });
+    }
+
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    const apiUrl = 'https://api.deepseek.com/v1/chat/completions';
+
+    console.log('API Key:', apiKey);
+    console.log('API URL:', apiUrl);
+
+    if (!apiKey) {
+      console.error('DeepSeek API key not configured');
+      return NextResponse.json({ error: 'API configuration error' }, { status: 500 });
+    }
+
+    const systemPrompt = `你是一个专业的 AI 艺术 prompt 工程师。你的任务是根据用户提供的方向和风格，生成高质量、详细的艺术创作 prompt。...`;
+    const userPrompt = `请为以下方向生成一个专业的艺术创作 prompt：方向：${direction}${style ? ` 风格偏好：${style}` : ''}...`;
+
+    const requestBody = {
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      max_tokens: 300,
+      temperature: 0.8,
+      top_p: 0.9,
+    };
+
+    console.log('Sending request to DeepSeek:', JSON.stringify(requestBody, null, 2));
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('DeepSeek API error:', response.status, errorData);
+      return NextResponse.json({ error: 'Failed to generate prompt', details: errorData }, { status: response.status });
+    }
+
+    const data = await response.json();
+    const generatedPrompt = data.choices?.[0]?.message?.content?.trim();
+
+    if (!generatedPrompt) {
+      console.error('No prompt generated from DeepSeek response');
+      return NextResponse.json({ error: 'No prompt generated' }, { status: 500 });
+    }
+
+    console.log('Generated Prompt:', generatedPrompt);
+    return NextResponse.json({
+      success: true,
+      prompt: generatedPrompt,
+      direction,
+      style,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Generate prompt error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
